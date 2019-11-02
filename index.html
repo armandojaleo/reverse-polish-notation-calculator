@@ -1,0 +1,222 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Reverse Polish notation Calculator</title>
+    <style>
+        #calculator {
+            background-color: darkgray;
+            border-radius: 10px;
+            padding: 5px 20px 20px;
+            width: 155px;
+        }
+
+        h2 {
+            color: white;
+        }
+
+        input {
+            width: 150px;
+        }
+
+        button {
+            width: 35px;
+        }
+    </style>
+</head>
+
+<body onload="init()">
+    <div id="calculator">
+        <h2>Calculator</h2>
+        <input id="input" type="hidden">
+        <input id="localstorage" placeholder="Inputed values"><br>
+        <input id="result" placeholder="Current value to input"><br><br>
+        <button id="enter" style="width: 74px">ENTER</button>
+        <button id="ce">CE</button>
+        <button id="ac">AC</button><br>
+        <button id="7">7</button>
+        <button id="8">8</button>
+        <button id="9">3</button>
+        <button id="plus">+</button><br>
+        <button id="4">4</button>
+        <button id="5">5</button>
+        <button id="6">6</button>
+        <button id="min">-</button><br>
+        <button id="1">1</button>
+        <button id="2">2</button>
+        <button id="3">3</button>
+        <button id="x">*</button><br>
+        <button id="dot">.</button>
+        <button id="0">0</button>
+        <button id="div">/</button>
+        <button id="sqrt">sqrt</button>
+    </div>
+    <footer>
+        Reverse Polish notation - <a href="https://en.wikipedia.org/wiki/Reverse_Polish_notation" title="Reverse Polish notation - Wikipedia">https://en.wikipedia.org/wiki/Reverse_Polish_notation</a>
+    </footer>
+    <script>
+        function convertTextToArray(text) {
+            return text.split('|');
+        }
+
+        function doBinaryOperation(arrayText) {
+            var arrayLength = arrayText.length;
+            var operator = arrayText[arrayLength - 1];
+            var last = arrayText[arrayLength - 2];
+            var beforeLast = arrayText[arrayLength - 3];
+            return [...arrayText.slice(0, -3), ...[eval(beforeLast + operator + last)]].join('|');
+        }
+
+        function doUnaryOperation(arrayText) {
+            var arrayLength = arrayText.length;
+            var value = arrayText[arrayLength - 2];
+            return [...arrayText.slice(0, -2), ...[eval('Math.sqrt(' + value + ')')]].join('|');
+        }
+
+        function correctLocalStorage() {
+            var currentLocalStorage = localStorage.getItem('input');
+            var arrayCurrentLocalStorage = convertTextToArray(currentLocalStorage);
+            var newArrayLocalStorage = arrayCurrentLocalStorage.slice(0, -1);
+            var newLocalStorageToSave = newArrayLocalStorage.join('|');
+            localStorage.setItem('input', newLocalStorageToSave);
+        }
+
+        function updateLocalStorage(functionToCall, array, check, slice) {
+            if (array.length > check) {
+                var result = functionToCall(array);
+                localStorage.setItem('input', result);
+                console.log(result);
+            } else {
+                console.log('Please enter more values');
+                correctLocalStorage();
+            }
+        }
+
+        function addOrUpdate(inputSaved, input) {
+            if (inputSaved === null || inputSaved === '') {
+                localStorage.setItem('input', input);
+            } else {
+                localStorage.setItem('input', inputSaved + '|' + input);
+            }
+        }
+
+        function rpnotation(input) {
+            var inputSaved = localStorage.getItem('input');
+            addOrUpdate(inputSaved, input);
+            var inputCurrent = localStorage.getItem('input');
+            var arrayInputCurrent = convertTextToArray(inputCurrent);
+            switch (input) {
+                case '+':
+                    updateLocalStorage(doBinaryOperation, arrayInputCurrent, 2, 1);
+                    break;
+
+                case '-':
+                    updateLocalStorage(doBinaryOperation, arrayInputCurrent, 2, 1);
+                    break;
+
+                case '*':
+                    updateLocalStorage(doBinaryOperation, arrayInputCurrent, 2, 1);
+                    break;
+
+                case '/':
+                    updateLocalStorage(doBinaryOperation, arrayInputCurrent, 2, 1);
+                    break;
+
+                case 'sqrt':
+                    updateLocalStorage(doUnaryOperation, arrayInputCurrent, 1, 1);
+                    break;
+
+                case 'ce':
+                    localStorage.setItem('input', '');
+                    break;
+
+                default:
+                    console.log(input);
+                    if (input.length > 1 && (input.indexOf('+') > 0 || input.indexOf('-') > 0 || input.indexOf('*') > 0 || input.indexOf('/') > 0 || input.indexOf('sqrt') > 0))
+                        correctLocalStorage();
+                    break;
+            }
+        }
+
+        function init() {
+            var localStorageText = localStorage.getItem('input');
+            if (localStorageText !== null && localStorageText !== '') {
+                document.getElementById('localstorage').value = localStorageText.replace(/\|/g, ' ');
+            }
+        }
+
+        function inputAction(input) {
+            rpnotation(input);
+            var localStorageText = localStorage.getItem('input');
+            var arrayLocalStorage = localStorageText.split('|');
+            var lengthArrayLocalStorage = arrayLocalStorage.length;
+            document.getElementById('input').value = '';
+            if (localStorageText !== null && localStorageText !== '') {
+                document.getElementById('localstorage').value = localStorageText.replace(/\|/g, ' ');
+            }
+            document.getElementById('result').value = arrayLocalStorage[lengthArrayLocalStorage - 1];
+            flag = 1;
+            if (flag === 1) {
+                document.getElementById('result').value = '';
+                flag = 0;
+            }
+        }
+
+        var buttons = document.getElementsByTagName('button');
+        var flag = 0;
+        for (var i in buttons) {
+            buttons[i].onclick = function () {
+                var value = this.innerText.toLowerCase();
+                var input = document.getElementById('result').value += value;
+                switch (value) {
+                    case 'enter':
+                        var enter = input.replace('enter', '')
+                        if (enter != '') {
+                            inputAction(enter);
+                        } else {
+                            document.getElementById('input').value = '';
+                        }
+                        break;
+
+                    case '+':
+                        inputAction(input);
+
+                        break;
+
+                    case '-':
+                        inputAction(input);
+                        break;
+
+                    case '*':
+                        inputAction(input);
+                        break;
+
+                    case '/':
+                        inputAction(input);
+                        break;
+
+                    case 'sqrt':
+                        inputAction(input);
+                        break;
+
+                    case 'ce':
+                        inputAction(input);
+                        document.getElementById('localstorage').value = '';
+                        break;
+
+                    case 'ac':
+                        document.getElementById('result').value = '';
+                        break;
+
+
+                    default:
+                        break;
+                }
+            };
+        }
+    </script>
+</body>
+
+</html>
